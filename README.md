@@ -1,2 +1,4 @@
-# minesweeper-as3
-Minesweeper game implementation AS3
+
+Please follow instruction on Github
+
+https://github.com/rmustafaiev/minesweeper-as3.git
