@@ -1,6 +1,7 @@
 package com.rmu.mnswp.presentation {
 import com.rmu.mnswp.common.Assets;
 import com.rmu.mnswp.model.Cell;
+import com.rmu.mnswp.model.CellState;
 import com.rmu.mnswp.presentation.CellFrameLabel;
 import com.rmu.mnswp.model.GameState;
 import com.rmu.mnswp.common.BasicComponent;
@@ -29,22 +30,6 @@ public class GameBoard extends BasicComponent {
         return i.toString() + ":" + j.toString();
     }
 
-    private function nameToIndexes(name:String):Array {
-        var res:Array = name.split(":");
-        if (res.length > 0) {
-            return [parseInt(res[0]), parseInt(res[1])]
-        }
-        return null;
-    }
-
-    private function eventTargetToCell(event):Cell {
-        const name:String = event.target && event.target.name;
-        const indeces = name && nameToIndexes(name);
-        if (name && indeces) {
-            return model.userBoard.getCell(indeces[0], indeces[1]);
-        }
-        return null;
-    }
     public function GameBoard(model:GameModel, controller:BoardCtr) {
         this._model = model;
         this._controller = controller;
@@ -84,8 +69,25 @@ public class GameBoard extends BasicComponent {
         }
     }
 
+    /**
+     * Board Model Updates
+     * @param data - an array of affected cells
+     */
     private function handleBoardDataChange(data:*):void {
+        var cells:Array = data as Array;
+        var cellAt:Cell;
+        var childAt:MovieClip;
+        var frameLabel:String;
+        if (cells){
+            for (var i = 0; i < cells.length; i++) {
+                cellAt = cells[i] as Cell;
+                frameLabel = CellFrameLabel.cellStateToFrameLabel(cellAt);
+                childAt = (cellAt.view as MovieClip)
 
+                childAt.gotoAndStop(frameLabel);
+                var z = 0;
+            }
+        }
     }
 
     private function handleState(state:*):void {
@@ -103,7 +105,10 @@ public class GameBoard extends BasicComponent {
                 addChildren();
                 addAllListeners();
                 break;
-            default:
+            case GameState.WIN:
+            case GameState.LOOSE:
+                removeStartListener();
+                removeAllListeners();
                 break;
         }
     }
@@ -145,10 +150,6 @@ public class GameBoard extends BasicComponent {
         removeEventListener(MouseEvent.CLICK, firstClickHandler);
     }
 
-    private function firstClickHandler(event:MouseEvent):void {
-        controller.firstTurn(event);
-    }
-
     private function addAllListeners():void {
         addEventListener(MouseEvent.CLICK, cellClickHandler);
         addEventListener(MouseEvent.MOUSE_DOWN, cellMouseDownHandler);
@@ -175,16 +176,11 @@ public class GameBoard extends BasicComponent {
         //trace(event.type +' - '+ event.target.name)
     }
 
-    private function cellRightClickHandler(event:MouseEvent):void {
-        //controller.cellRightClickHandler(event);
-        //trace(event.type +' - '+ event.target.name)
-    }
-
     private function cellMouseUpHandler(event:MouseEvent):void {
-        //TODO Only when cell is dicovered
+        //TODO Only when cell is discovered
         return;
         //controller.cellMouseUpHandler(event);
-        trace(event.type +' - '+ event.target.name)
+        trace(event.type + ' - ' + event.target.name)
     }
 
     private function cellMouseDownHandler(event:MouseEvent):void {
@@ -194,16 +190,19 @@ public class GameBoard extends BasicComponent {
 
         return;
         //controller.cellMouseDownHandler(event);
-        trace(event.type +' - '+ event.target.name)
+        trace(event.type + ' - ' + event.target.name)
+    }
+
+    private function firstClickHandler(event:MouseEvent):void {
+        controller.firstTimeCellClickHandler(event);
     }
 
     private function cellClickHandler(event:MouseEvent):void {
-        //
-        trace(event.type +' - '+ event.target.name)
-        const cell:Cell = eventTargetToCell(event);
-        if (cell){
-            controller.cellClickHandler(cell);
-        }
+        controller.cellClickHandler(event);
+    }
+
+    private function cellRightClickHandler(event:MouseEvent):void {
+        controller.cellRightClickHandler(event);
     }
 }
 }

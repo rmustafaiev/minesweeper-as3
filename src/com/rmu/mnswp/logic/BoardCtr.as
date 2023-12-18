@@ -16,15 +16,44 @@ public class BoardCtr {
         return _model;
     }
 
-    public function firstTurn(event:Event):void {
-        const cell:Cell = model.userBoard.findCellByView(event.target as DisplayObject);
+    public function firstTimeCellClickHandler(event:Event):void {
+        const cell:Cell = eventTargetToCell(event);
         if (cell) {
-            model.performFirstTurn(cell);
+            model.performFirstBoardCellClick(cell);
         }
     }
 
-    public function cellClickHandler(cell:Cell):void {
-        model.cellClick(cell);
+    public function cellClickHandler(event:Event):void {
+        const cell:Cell = eventTargetToCell(event);
+        if (cell) {
+            model.performBoardCellClick(cell);
+        }
     }
+
+    public function cellRightClickHandler(event:Event):void {
+        const cell:Cell = eventTargetToCell(event);
+        if (cell) {
+            model.performBoardCellRightClick(cell);
+        }
+    }
+
+    private function eventTargetToCell(event):Cell {
+        const name:String = event.target && event.target.name;
+        const indeces = name && nameToIndexes(name);
+        if (name && indeces) {
+            return model.userBoard.getCell(indeces[0], indeces[1]);
+        }
+        return null;
+    }
+
+    private function nameToIndexes(name:String):Array {
+        var res:Array = name.split(":");
+        if (res.length > 0) {
+            return [parseInt(res[0]), parseInt(res[1])]
+        }
+        return null;
+    }
+
+
 }
 }

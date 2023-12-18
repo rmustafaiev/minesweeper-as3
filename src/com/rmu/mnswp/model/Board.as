@@ -22,16 +22,30 @@ public class Board {
      * @return board Board - same board
      */
     public static function firstClickSafeWithMines(clickedCell:Cell, minesCount:int, board:Board):Board {
-        var cellOnBoard:Cell = board.getCell(clickedCell.colIndex, clickedCell.rowIndex);
+        const cellOnBoard:Cell = board.getCell(clickedCell.colIndex, clickedCell.rowIndex);
+        const r1:Cell = board.getCell(0, 0);
+        const r2:Cell = board.getCell(0, board.side - 1);
+        const r3:Cell = board.getCell(board.side - 1, board.side - 1);
+        const r4:Cell = board.getCell(board.side - 1, 0);
 
         if (cellOnBoard) {
             cellOnBoard.__setState(CellState.RESERVED);
-            board.getCell(0, 0).__setState(CellState.RESERVED);
-            board.getCell(0, board.side - 1).__setState(CellState.RESERVED);
-            board.getCell(board.side - 1, board.side - 1).__setState(CellState.RESERVED);
-            board.getCell(board.side - 1, 0).__setState(CellState.RESERVED);
+            r1.__setState(CellState.RESERVED);
+            r2.__setState(CellState.RESERVED);
+            r3.__setState(CellState.RESERVED);
+            r4.__setState(CellState.RESERVED);
         }
-        return Board.randomMines(minesCount, board);
+        // Put mines
+        Board.randomMines(minesCount, board);
+
+        // Unset reserved statuses
+        cellOnBoard.__setState(CellState.HIDDEN);
+        r1.__setState(CellState.HIDDEN);
+        r2.__setState(CellState.HIDDEN);
+        r3.__setState(CellState.HIDDEN);
+        r4.__setState(CellState.HIDDEN);
+
+        return board;
     }
 
     /**
@@ -102,7 +116,7 @@ public class Board {
         var lookupCell:Cell = null;
         if (cell) {
             //  0 - this cell [0,0] 24:00 [row-1, col+1]
-           //  24:00 [row-1, col]
+            //  24:00 [row-1, col]
             cell.setCount(0);
             lookupCell = board.getCell(cell.colIndex, cell.rowIndex - 1);
             if (lookupCell) {
@@ -163,11 +177,11 @@ public class Board {
         return board;
     }
 
-    public static function printBoardState(board:Board):void {
+    public static function printBoardMines(board:Board):void {
         for (var i = 0; i < board.side; i++) {
             var row:String = '';
             for (var j = 0; j < board.side; j++) {
-                row += "\t|\t" + board.getCell(i, j).state;
+                row += "\t|\t" + (board.getCell(i, j).isMined() ? '*' : '0');
             }
             trace(row + "\t|")
         }
@@ -200,7 +214,7 @@ public class Board {
         for (var i = 0; i < side; i++) {
             _board[i] = [];
             for (var j = 0; j < side; j++) {
-                _board[i][j] = new Cell(i, j, 0, CellState.UNDEFINED);
+                _board[i][j] = new Cell(i, j, 0, CellState.HIDDEN);
                 _flatBoard.push(_board[i][j]);
             }
         }
@@ -240,7 +254,7 @@ public class Board {
             }
         });
 
-        if (res && res.length){
+        if (res && res.length) {
             return res[0];
         }
         return null;
