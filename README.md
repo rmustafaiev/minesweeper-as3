@@ -66,7 +66,7 @@ https://airsdk.harman.com/download
 <br>You should be ready to build/compile.
 <br>
 <br>
-Checkout an article to Setup AS3 Project
+Please read an article to **_Setup AS3 Project_**
 in Visual Studio Code.
 https://github.com/BowlerHatLLC/vscode-as3mxml/wiki/Create-a-new-ActionScript-project-in-Visual-Studio-Code-that-targets-Adobe-AIR-for-desktop-platforms
 
