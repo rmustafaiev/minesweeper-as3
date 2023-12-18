@@ -1,4 +1,4 @@
-package com.rmu.mnswp.components {
+package com.rmu.mnswp.common {
 import flash.display.Sprite;
 import flash.display.Stage;
 import flash.events.Event;

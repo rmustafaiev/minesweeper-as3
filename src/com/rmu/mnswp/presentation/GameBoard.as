@@ -1,8 +1,9 @@
 package com.rmu.mnswp.presentation {
 import com.rmu.mnswp.common.Assets;
-import com.rmu.mnswp.common.CellFrameLabel;
-import com.rmu.mnswp.common.GameState;
-import com.rmu.mnswp.components.BasicComponent;
+import com.rmu.mnswp.model.Cell;
+import com.rmu.mnswp.presentation.CellFrameLabel;
+import com.rmu.mnswp.model.GameState;
+import com.rmu.mnswp.common.BasicComponent;
 import com.rmu.mnswp.events.GameEvent;
 import com.rmu.mnswp.logic.BoardCtr;
 import com.rmu.mnswp.logic.GameModel;
@@ -23,12 +24,30 @@ public class GameBoard extends BasicComponent {
 
     private var _model:GameModel;
     private var _controller:BoardCtr;
-    private var _allCells:Array = [];
 
+    private function indexesToName(i:int, j:int):String {
+        return i.toString() + ":" + j.toString();
+    }
+
+    private function nameToIndexes(name:String):Array {
+        var res:Array = name.split(":");
+        if (res.length > 0) {
+            return [parseInt(res[0]), parseInt(res[1])]
+        }
+        return null;
+    }
+
+    private function eventTargetToCell(event):Cell {
+        const name:String = event.target && event.target.name;
+        const indeces = name && nameToIndexes(name);
+        if (name && indeces) {
+            return model.userBoard.getCell(indeces[0], indeces[1]);
+        }
+        return null;
+    }
     public function GameBoard(model:GameModel, controller:BoardCtr) {
         this._model = model;
         this._controller = controller;
-        this._allCells = [];
     }
 
 
@@ -36,14 +55,19 @@ public class GameBoard extends BasicComponent {
         super.addChildren();
 
         if (model.userBoard) {
+            const side:int = model.userBoard.side;
             var childAt:MovieClip;
-            for (var i = 0; i < model.userBoard.side; i++) {
-                for (var j = 0; j < model.userBoard.side; j++) {
+            var cellAt:Cell;
+
+            for (var i = 0; i < side; i++) {
+                for (var j = 0; j < side; j++) {
+                    cellAt = model.userBoard.getCell(i, j);
                     childAt = new Assets.refMineCell();
-                    childAt.name = model.userBoard.getAt(i, j).cellId;
+                    childAt.name = indexesToName(i, j);
                     childAt.gotoAndStop(CellFrameLabel.UNDISCOVERED);
-                    _allCells.push(childAt);
-                    addChild(childAt)
+
+                    cellAt.setView(childAt);
+                    addChild(childAt);
                 }
             }
         }
@@ -66,14 +90,17 @@ public class GameBoard extends BasicComponent {
 
     private function handleState(state:*):void {
         switch (state) {
-            case GameState.NEW:
+            case GameState.PREPARE:
                 boardDestroy();
+                addStartListener();
                 break;
-            case GameState.STARTED:
+            case GameState.START:
                 addChildren();
                 addStartListener();
                 break;
             case GameState.PROGRESS:
+                boardDestroy();
+                addChildren();
                 addAllListeners();
                 break;
             default:
@@ -87,20 +114,18 @@ public class GameBoard extends BasicComponent {
         }
         const cw:int = 48;
         const padding:int = 2;
-        var offsetX = 0;
-        var offsetY = 0;
-        var cellAt:DisplayObject;
+        const side:int = model.userBoard.side;
+        var childAt:DisplayObject;
         var childNameAt:String;
-        for (var i = 0; i < model.userBoard.side; i++) {
-            for (var j = 0; j < model.userBoard.side; j++) {
-                childNameAt = model.userBoard.getAt(i,j).cellId;
-                cellAt = getChildByName(childNameAt);
-                cellAt.width = cellAt.height = cw;
-                cellAt.x = offsetX;
-                cellAt.y = offsetY;
-                offsetY = j * cw + padding;
+
+        for (var i = 0; i < side; i++) {
+            for (var j = 0; j < side; j++) {
+                childNameAt = indexesToName(i, j);
+                childAt = getChildByName(childNameAt);
+                childAt.width = childAt.height = cw;
+                childAt.x = i * cw + padding;
+                childAt.y = j * cw + padding;
             }
-            offsetX = i * cw + padding;
         }
     }
 
@@ -121,111 +146,64 @@ public class GameBoard extends BasicComponent {
     }
 
     private function firstClickHandler(event:MouseEvent):void {
-        var z = event.target;
-        trace(event.target)
+        controller.firstTurn(event);
     }
 
     private function addAllListeners():void {
-        if (_allCells.length) {
-            var cellAt:DisplayObject;
-            for (var i = 0; i < _allCells.length; i++) {
-                cellAt = _allCells[i];
-                cellAt.addEventListener(MouseEvent.CLICK, cellClickHandler);
-                cellAt.addEventListener(MouseEvent.MOUSE_DOWN, cellMouseDownHandler);
-                cellAt.addEventListener(MouseEvent.MOUSE_UP, cellMouseUpHandler);
-                cellAt.addEventListener(MouseEvent.RIGHT_CLICK, cellRightClickHandler);
-                cellAt.addEventListener(MouseEvent.MOUSE_OVER, cellMouseOverHandler);
-                cellAt.addEventListener(MouseEvent.MOUSE_OUT, cellMouseOutHandler);
-            }
-        }
+        addEventListener(MouseEvent.CLICK, cellClickHandler);
+        addEventListener(MouseEvent.MOUSE_DOWN, cellMouseDownHandler);
+        addEventListener(MouseEvent.MOUSE_UP, cellMouseUpHandler);
+        addEventListener(MouseEvent.RIGHT_CLICK, cellRightClickHandler);
+        addEventListener(MouseEvent.MOUSE_OVER, cellMouseOverHandler);
+        addEventListener(MouseEvent.MOUSE_OUT, cellMouseOutHandler);
     }
 
     private function removeAllListeners():void {
-        if (_allCells.length) {
-            var cellAt:DisplayObject;
-            for (var i = 0; i < _allCells.length; i++) {
-                cellAt = _allCells[i];
-                cellAt.removeEventListener(MouseEvent.CLICK, cellClickHandler);
-                cellAt.removeEventListener(MouseEvent.MOUSE_DOWN, cellMouseDownHandler);
-                cellAt.removeEventListener(MouseEvent.MOUSE_UP, cellMouseUpHandler);
-                cellAt.removeEventListener(MouseEvent.RIGHT_CLICK, cellRightClickHandler);
-                cellAt.removeEventListener(MouseEvent.MOUSE_OVER, cellMouseOverHandler);
-                cellAt.removeEventListener(MouseEvent.MOUSE_OUT, cellMouseOutHandler);
-            }
-        }
+        removeEventListener(MouseEvent.CLICK, cellClickHandler);
+        removeEventListener(MouseEvent.MOUSE_DOWN, cellMouseDownHandler);
+        removeEventListener(MouseEvent.MOUSE_UP, cellMouseUpHandler);
+        removeEventListener(MouseEvent.RIGHT_CLICK, cellRightClickHandler);
+        removeEventListener(MouseEvent.MOUSE_OVER, cellMouseOverHandler);
+        removeEventListener(MouseEvent.MOUSE_OUT, cellMouseOutHandler);
     }
 
     private function cellMouseOutHandler(event:MouseEvent):void {
-
+        //trace(event.type +' - '+ event.target.name)
     }
 
     private function cellMouseOverHandler(event:MouseEvent):void {
-
+        //trace(event.type +' - '+ event.target.name)
     }
 
     private function cellRightClickHandler(event:MouseEvent):void {
         //controller.cellRightClickHandler(event);
+        //trace(event.type +' - '+ event.target.name)
     }
 
     private function cellMouseUpHandler(event:MouseEvent):void {
+        //TODO Only when cell is dicovered
+        return;
         //controller.cellMouseUpHandler(event);
+        trace(event.type +' - '+ event.target.name)
     }
 
     private function cellMouseDownHandler(event:MouseEvent):void {
+        //TODO Only when cell is discovered
+        // we need to check
+        //whether cell discovered and the highlight around cells
+
+        return;
         //controller.cellMouseDownHandler(event);
+        trace(event.type +' - '+ event.target.name)
     }
 
     private function cellClickHandler(event:MouseEvent):void {
-        //controller.cellClickHandler(event);
-    }
-
-
-    private function addBtnsCtrl():void {
-
-
-        function cellName(i:int, j:int):String {
-            return 'cell[' + i + '][' + j + ']';
-        }
-
-        const states:Array = [
-            CellFrameLabel.UNDISCOVERED,
-            CellFrameLabel.DISCOVERED_EMPTY,
-            CellFrameLabel.UNDISCOVERED_HIGHLIGHT,
-            CellFrameLabel.DISCOVERED_MINE,
-            CellFrameLabel.FLAG_SET,
-            CellFrameLabel.DISCOVERED_1,
-            CellFrameLabel.DISCOVERED_2,
-            CellFrameLabel.DISCOVERED_3,
-            CellFrameLabel.DISCOVERED_4,
-            CellFrameLabel.DISCOVERED_5,
-            CellFrameLabel.DISCOVERED_6,
-            CellFrameLabel.DISCOVERED_7]
-
-//addChild(cell);
-        const cells:Array = [];
-        const cw:int = 48;
-        const padding:int = 2;
-        var offsetX = 0;
-        var offsetY = 0;
-        var cellAt:MovieClip;
-        for (var i:int = 0; i < 10; i++) {
-            for (var j:int = 0; j < 10; j++) {
-                var label:String = states[Math.floor(Math.random() * states.length)]
-                cellAt = new Assets.refMineCell();
-                cellAt.name = cellName(i, j);
-                cellAt.gotoAndStop(label);
-                cellAt.width = cellAt.height = cw;
-                cellAt.x = offsetX;
-                cellAt.y = offsetY;
-
-
-                offsetY = j * cw;
-                addChild(cellAt)
-            }
-            offsetX = i * cw;
+        //
+        trace(event.type +' - '+ event.target.name)
+        const cell:Cell = eventTargetToCell(event);
+        if (cell){
+            controller.cellClickHandler(cell);
         }
     }
-
-
 }
 }

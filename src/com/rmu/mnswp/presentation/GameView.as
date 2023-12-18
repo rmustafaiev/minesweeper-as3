@@ -1,23 +1,31 @@
 package com.rmu.mnswp.presentation {
 import com.rmu.mnswp.common.Assets;
-import com.rmu.mnswp.common.GameState;
-import com.rmu.mnswp.components.BasicComponent;
+import com.rmu.mnswp.model.GameState;
+import com.rmu.mnswp.common.BasicComponent;
 import com.rmu.mnswp.events.GameEvent;
 import com.rmu.mnswp.logic.BoardCtr;
 import com.rmu.mnswp.logic.GameModel;
 import com.rmu.mnswp.logic.InteractionCtr;
 
 import flash.display.Bitmap;
-import flash.display.DisplayObject;
 import flash.display.SimpleButton;
 import flash.display.Sprite;
-import flash.display.Sprite;
-import flash.events.Event;
 import flash.events.MouseEvent;
 import flash.geom.Rectangle;
 import flash.text.TextField;
 
 public class GameView extends BasicComponent {
+    /**
+     * Game view
+     * @param model
+     * @param controller
+     * @param viewportMin
+     */
+    public function GameView(model:GameModel, controller:InteractionCtr, viewportMin:Rectangle) {
+        super(viewportMin);
+        this._model = model;
+        this._controller = controller;
+    }
     private var background:Bitmap;
     private var logo:Sprite;
     private var playBtn:SimpleButton;
@@ -27,7 +35,6 @@ public class GameView extends BasicComponent {
     private var bottomEmptyPlaceholder:Sprite;
     private var topmostEmptyPlaceholder:Sprite;
     private var gameBoard:GameBoard;
-
     private var _model:GameModel;
     private var _controller:InteractionCtr;
 
@@ -39,102 +46,10 @@ public class GameView extends BasicComponent {
         return _controller;
     }
 
-    public function GameView(model:GameModel, controller:InteractionCtr, viewportMin:Rectangle) {
-        super(viewportMin);
-        this._model = model;
-        this._controller = controller;
-    }
-
-    public function update(event:GameEvent):void {
-        gameBoard.update(event);
-        /*
-        impl strategy
-        eg
-        getStartegy by event type
-         */
-        switch (event.type){
-            case GameEvent.STATE:
-                    handleState(event.data);
-                break;
-            case GameEvent.STATISTICS:
-                    handleStatisticsChange(event.data)
-                break;
-            default:
-                break;
-        }
-
-    }
-
-    private function handleState(state:*):void {
-        switch (state){
-            case GameState.NEW:
-                hideExceptNewGame();
-                break;
-            case GameState.STARTED:
-                showToFirstTurn();
-                break;
-            case GameState.PROGRESS:
-                showProgress();
-                break;
-            default:
-                break;
-        }
-    }
-    private function hideExceptNewGame():void {
-        playBtn.visible = true;
-        resetBtn.visible = false;
-        gameTimer.visible = false;
-        minesDisplay.visible = false;
-        gameBoard.visible = false;
-    }
-
-    private function showToFirstTurn():void{
-        playBtn.visible = false;
-        resetBtn.visible = false;
-        gameTimer.visible = true;
-        minesDisplay.visible = true;
-        gameBoard.visible = true;
-        updateStats();
-        invalidateLayout();
-    }
-
-    private function showProgress():void{
-        playBtn.visible = false;
-        resetBtn.visible = true;
-        gameTimer.visible = true;
-        minesDisplay.visible = true;
-        gameBoard.visible = true;
-        updateStats();
-    }
-
-    private function handleStatisticsChange(data:*):void {
-        updateStats();
-    }
-
-    private function updateStats():void {
-        var timerTf:TextField = gameTimer.getChildByName('timerField') as TextField;
-        var minesTf:TextField = minesDisplay.getChildByName('minesField') as TextField;
-
-        if (timerTf){
-            timerTf.text = model.timer === 0 ? "" : model.timer.toString();
-        }
-        if (minesTf){
-            minesTf.text = model.minesDiscovered === 0 ? "" : model.minesDiscovered.toString();
-        }
-    }
-
     override protected function initialize():void {
         super.initialize(); //schedule invalidateLayout
         playBtn.addEventListener(MouseEvent.CLICK, onPlayBtnClick);
         resetBtn.addEventListener(MouseEvent.CLICK, onResetBtnClick);
-    }
-
-    private function onResetBtnClick(event:MouseEvent):void {
-        controller.onResetBtnClickHandler(event);
-    }
-
-    private function onPlayBtnClick(event:MouseEvent):void {
-        controller.onPlayBtnClickHandler(event);
     }
 
     override protected function addChildren():void {
@@ -163,6 +78,7 @@ public class GameView extends BasicComponent {
     override protected function resize(width:Number, height:Number):void{
         invalidateLayout();
     }
+
     /*
         ** NOTE this is just an example and not exact or pixel perfect match.
         Goal was to fit controls/graphic within the view container
@@ -221,6 +137,93 @@ public class GameView extends BasicComponent {
 
         gameBoard.x = viewArea.width/2 - gameBoard.width/2;
         gameBoard.y = (gameTimer.y + gameTimer.height)+ 20;
+    }
+
+    private function handleState(state:*):void {
+        switch (state){
+            case GameState.PREPARE:
+                showPrepareGame();
+                break;
+            case GameState.START:
+                showFirstTurn();
+                break;
+            case GameState.PROGRESS:
+                showProgress();
+                break;
+            default:
+                break;
+        }
+    }
+
+    private function showPrepareGame():void {
+        playBtn.visible = true;
+        resetBtn.visible = false;
+        gameTimer.visible = false;
+        minesDisplay.visible = false;
+        gameBoard.visible = false;
+    }
+
+    private function showFirstTurn():void{
+        playBtn.visible = false;
+        resetBtn.visible = false;
+        gameTimer.visible = true;
+        minesDisplay.visible = true;
+        gameBoard.visible = true;
+        updateStats();
+        invalidateLayout();
+    }
+
+    private function showProgress():void{
+        playBtn.visible = false;
+        resetBtn.visible = true;
+        gameTimer.visible = true;
+        minesDisplay.visible = true;
+        gameBoard.visible = true;
+        updateStats();
+    }
+
+    private function handleStatisticsChange(data:*):void {
+        updateStats();
+    }
+
+    private function updateStats():void {
+        var timerTf:TextField = gameTimer.getChildByName('timerField') as TextField;
+        var minesTf:TextField = minesDisplay.getChildByName('minesField') as TextField;
+
+        if (timerTf){
+            timerTf.text = model.timer === 0 ? "" : model.timer.toString();
+        }
+        if (minesTf){
+            minesTf.text = model.minesDiscovered === 0 ? "" : model.minesDiscovered.toString();
+        }
+    }
+
+    public function update(event:GameEvent):void {
+        gameBoard.update(event);
+        /*
+        impl strategy
+        eg
+        getStartegy by event type
+         */
+        switch (event.type){
+            case GameEvent.STATE:
+                    handleState(event.data);
+                break;
+            case GameEvent.STATISTICS:
+                    handleStatisticsChange(event.data)
+                break;
+            default:
+                break;
+        }
+
+    }
+
+    private function onResetBtnClick(event:MouseEvent):void {
+        controller.onResetBtnClickHandler(event);
+    }
+
+    private function onPlayBtnClick(event:MouseEvent):void {
+        controller.onPlayBtnClickHandler(event);
     }
 
 }

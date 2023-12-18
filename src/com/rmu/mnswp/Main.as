@@ -1,11 +1,11 @@
 package com.rmu.mnswp {
 
-import com.rmu.mnswp.components.BasicComponent;
+import com.rmu.mnswp.common.BasicComponent;
 import com.rmu.mnswp.events.GameEvent;
 import com.rmu.mnswp.logic.BoardCtr;
 import com.rmu.mnswp.logic.GameModel;
 import com.rmu.mnswp.logic.InteractionCtr;
-import com.rmu.mnswp.common.CellFrameLabel;
+import com.rmu.mnswp.presentation.CellFrameLabel;
 import com.rmu.mnswp.model.Board;
 import com.rmu.mnswp.model.Cell;
 import com.rmu.mnswp.presentation.GameBoard;
@@ -34,34 +34,17 @@ public class Main extends BasicComponent {
     private var gameView:GameView;
 
     public function Main2() {
-
-        var clazz:Class =  Assets.refMineCell;
-
-//        clazz.prototype.setCell = function(cell):void{
-//            clazz.prototype._cell = cell;
-//        }
-//        clazz.prototype.getCell = function():*{
-//            return clazz.prototype._cell;
-//        }
-//        trace(clazz)
-
-        var newbee = new clazz();
-
-        newbee.setCellModel(new Cell(0,0,0,0))
-        trace('newbee: has cell ? '+newbee.cellModel())
     }
     public function Main() {
         super();
-        var testBoard:Board = new Board(7);
-        Board.printBoard(testBoard);
-        //Board.randomMines(35, testBoard);
-        trace('---------------------------')
-        Board.firstClickSafeWithMines(testBoard.getAt(3,3), 5, testBoard);
-        Board.printBoard(testBoard);
-        trace('--------- clone ------------------')
-        Board.printBoard(testBoard.clone());
-
-        var zz = 0;
+//        var testBoard:Board = new Board(7);
+//        Board.printBoard(testBoard);
+//        //Board.randomMines(35, testBoard);
+//        trace('---------------------------')
+//        Board.firstClickSafeWithMines(testBoard.getCell(3,3), 5, testBoard);
+//        Board.printBoard(testBoard);
+//        trace('--------- clone ------------------')
+//        Board.printBoard(testBoard.clone());
         this.stage.align = StageAlign.TOP_LEFT;
         this.stage.scaleMode = StageScaleMode.NO_SCALE;
 

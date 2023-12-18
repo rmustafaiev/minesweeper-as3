@@ -1,4 +1,4 @@
-package com.rmu.mnswp.common {
+package com.rmu.mnswp.presentation {
 public class CellFrameLabel {
 
     public static const UNDISCOVERED:String = 'UNDISCOVERED';
