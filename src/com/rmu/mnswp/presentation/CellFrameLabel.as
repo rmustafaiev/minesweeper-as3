@@ -1,4 +1,7 @@
 package com.rmu.mnswp.presentation {
+import com.rmu.mnswp.model.Cell;
+import com.rmu.mnswp.model.CellState;
+
 public class CellFrameLabel {
 
     public static const UNDISCOVERED:String = 'UNDISCOVERED';
@@ -14,5 +17,22 @@ public class CellFrameLabel {
     public static const DISCOVERED_7:String = 'DISCOVERED_7';
     public static const DISCOVERED_MINE:String = 'BOOM';
 
+    public static function cellStateToFrameLabel(cell:Cell):String{
+        switch (cell.state){
+            case CellState.MINED:
+                return DISCOVERED_MINE;
+            case CellState.FLAGGED:
+                return FLAG_SET;
+            case CellState.HIDDEN:
+                return UNDISCOVERED;
+            case CellState.OPEN:
+                var ptr:String = 'DISCOVERED_';
+                    return (cell.count === 0)
+                            ? DISCOVERED_EMPTY
+                            : ptr+cell.count.toString()
+                break;
+        }
+        return UNDISCOVERED;
+    }
 }
 }

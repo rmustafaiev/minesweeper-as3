@@ -2,24 +2,15 @@ package com.rmu.mnswp {
 
 import com.rmu.mnswp.common.BasicComponent;
 import com.rmu.mnswp.events.GameEvent;
-import com.rmu.mnswp.logic.BoardCtr;
 import com.rmu.mnswp.logic.GameModel;
 import com.rmu.mnswp.logic.InteractionCtr;
-import com.rmu.mnswp.presentation.CellFrameLabel;
-import com.rmu.mnswp.model.Board;
-import com.rmu.mnswp.model.Cell;
-import com.rmu.mnswp.presentation.GameBoard;
 import com.rmu.mnswp.presentation.GameView;
-import com.rmu.mnswp.common.Assets;
 
-import flash.display.DisplayObjectContainer;
-import flash.display.MovieClip;
 import flash.display.StageAlign;
 import flash.display.StageScaleMode;
 import flash.geom.Rectangle;
-import flash.text.TextField;
 
-[SWF(width="600", height="800", frameRate="60", backgroundColor="#1F0E72")]
+[SWF(width="800", height="800", frameRate="60", backgroundColor="#1F0E72")]
 public class Main extends BasicComponent {
 
     // Game minimum Viewport area,
@@ -30,25 +21,12 @@ public class Main extends BasicComponent {
     // game main entities
     private var gameModel:GameModel;
     private var interactionCtr:InteractionCtr;
-    private var boardCtr:BoardCtr;
     private var gameView:GameView;
 
-    public function Main2() {
-    }
     public function Main() {
         super();
-//        var testBoard:Board = new Board(7);
-//        Board.printBoard(testBoard);
-//        //Board.randomMines(35, testBoard);
-//        trace('---------------------------')
-//        Board.firstClickSafeWithMines(testBoard.getCell(3,3), 5, testBoard);
-//        Board.printBoard(testBoard);
-//        trace('--------- clone ------------------')
-//        Board.printBoard(testBoard.clone());
         this.stage.align = StageAlign.TOP_LEFT;
         this.stage.scaleMode = StageScaleMode.NO_SCALE;
-
-
     }
 
     /**
@@ -75,7 +53,6 @@ public class Main extends BasicComponent {
         gameModel.addEventListener(GameEvent.BOARD, gameView.update);
         gameModel.newGame();
     }
-
 
 
 }

@@ -36,8 +36,8 @@ public class Cell {
         return _state === CellState.MINED;
     }
 
-    public function isFree():Boolean {
-        return _state === CellState.FREE;
+    public function isOpen():Boolean {
+        return _state === CellState.OPEN;
     }
     /**
      * Only allowed state to set by user

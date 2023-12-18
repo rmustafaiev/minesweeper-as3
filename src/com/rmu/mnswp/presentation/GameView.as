@@ -150,9 +150,24 @@ public class GameView extends BasicComponent {
             case GameState.PROGRESS:
                 showProgress();
                 break;
+            case GameState.WIN:
+                showYouWin();
+                break;
+            case GameState.LOOSE:
+                showYouLoose();
+                break;
             default:
                 break;
         }
+    }
+
+    private function showYouWin():void {
+        playBtn.visible = false;
+        resetBtn.visible = false;
+    }
+    private function showYouLoose():void {
+        playBtn.visible = false;
+        resetBtn.visible = false;
     }
 
     private function showPrepareGame():void {
@@ -211,8 +226,6 @@ public class GameView extends BasicComponent {
                 break;
             case GameEvent.STATISTICS:
                     handleStatisticsChange(event.data)
-                break;
-            default:
                 break;
         }
 

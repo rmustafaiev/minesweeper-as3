@@ -1,4 +1,5 @@
 package com.rmu.mnswp.logic {
+import com.rmu.mnswp.model.CellState;
 import com.rmu.mnswp.model.GameState;
 import com.rmu.mnswp.events.GameEvent;
 import com.rmu.mnswp.model.Board;
@@ -45,20 +46,12 @@ public class GameModel extends EventDispatcher {
 
 
     public function GameModel() {
-
     }
 
 
-    public function newGame(boardSize = 9, minesCount:int = 10):void {
-        _state = GameState.PREPARE;
-        _boardSize = boardSize
-        _minesCount = minesCount
-        _userBoard = new Board(boardSize);
-
-        //Board.printBoardIndeces(_userBoard);
-        dispatchEvent(new GameEvent(GameEvent.STATE, state));
-    }
-
+    /**
+     * Initiate Game Start
+     */
     public function playGame():void {
         _state = GameState.START;
         dispatchEvent(new GameEvent(GameEvent.STATE, state));
@@ -68,39 +61,87 @@ public class GameModel extends EventDispatcher {
 
     }
 
+    /**
+     * Create new board just PREPARATION
+     * @param boardSize
+     * @param minesCount
+     */
+    public function newGame(boardSize = 9, minesCount:int = 10):void {
+        _boardSize = boardSize
+        _minesCount = minesCount
+        _userBoard = new Board(boardSize);
 
-    public function performFirstTurn(cell:Cell):void {
-        _realBoard = new Board(_boardSize);
-        _realBoard = Board.firstClickSafeWithMines(cell, _minesCount, _realBoard);
-        trace(' ---- SAFE REAL BOARD --- ')
-        trace(' ---- generated on click '+cell+':'+cell.cellId +' --- ')
-        Board.printBoardState(_realBoard);
-        trace(' ---- FULFILL REAL BOARD + Neighbours count  --- ')
-        var allCells = _realBoard.getCellsLinear();
-        for (var i = 0; i < allCells.length; i++) {
-            Board.cellNearbyMines(allCells[i], _realBoard);
-        }
-
-        trace(' ----- NEW FULFILL REAL BOARD--- ')
-        Board.printBoardCount(_realBoard);
-        trace('')
-        //
-        _userBoard = _realBoard.clone();
-        //
-
-        trace(' ----- USER BOARD --- ')
-        //Board.printBoard(_userBoard);
-        _state = GameState.PROGRESS;
+        _state = GameState.PREPARE;
         dispatchEvent(new GameEvent(GameEvent.STATE, state));
     }
+    /**
+     * Create new Boards with SAFE cells,
+     * First Board Cell has been clicked
+     * game progress initiated here
+     * @param cell - clicked cell
+     */
+    public function performFirstBoardCellClick(cell:Cell):void {
+        const tmpCol:int = cell.colIndex;
+        const tmpRow:int = cell.rowIndex;
 
-    public function cellClick(cell:Cell):void {
+        _realBoard = new Board(_boardSize);
+        _realBoard = Board.firstClickSafeWithMines(cell, _minesCount, _realBoard);
+
+        trace(' ---- BOARD + MINES  ---- ')
+        Board.printBoardMines(_realBoard);
+        // fill board nearby cells count
+        const boardAllCells = _realBoard.getCellsLinear();
+        for (var i = 0; i < boardAllCells.length; i++) {
+            Board.cellNearbyMines(boardAllCells[i], _realBoard);
+        }
+
+        // copy to user board
+        _userBoard = _realBoard.clone();
+        // time to game, now progress starts!
+        _state = GameState.PROGRESS;
+        dispatchEvent(new GameEvent(GameEvent.STATE, state));
+
+        // Reveal 1st clicked Cell
+        const cellShow:Cell = userBoard.getCell(tmpCol, tmpRow);
+        cellShow.__setState(CellState.OPEN);
+        dispatchEvent(new GameEvent(GameEvent.BOARD, [cellShow]));
+    }
+
+    /**
+     * Game in progress, User keep discovering cells
+     * @param cell - clicked cell
+     */
+    public function performBoardCellClick(cell:Cell):void {
         trace(' ---- cellClick '+cell+':'+cell.cellId+' --- ')
         const bc:Cell = userBoard.getCell(cell.colIndex, cell.rowIndex);
-
-        if (bc && bc.view){
-            MovieClip(bc.view).gotoAndStop(CellFrameLabel.DISCOVERED_1);
+        // Ignore flagged cells
+        if (bc.isFlagged()){
+            return;
         }
+        // Bada boom!!!
+        if (bc.isMined()){
+            bc.__setState(CellState.MINED);
+            dispatchEvent(new GameEvent(GameEvent.BOARD, [bc]));
+            _state = GameState.LOOSE;
+            dispatchEvent(new GameEvent(GameEvent.STATE, [bc]));
+        }
+        else {
+            // Game must go on.
+            bc.__setState(CellState.OPEN);
+            dispatchEvent(new GameEvent(GameEvent.BOARD, [bc]));
+        }
+    }
+
+    public function performBoardCellRightClick(cell:Cell):void {
+        const bc:Cell = userBoard.getCell(cell.colIndex, cell.rowIndex);
+        const rbc:Cell = realBoard.getCell(cell.colIndex, cell.rowIndex);
+        if (!bc.isFlagged()){
+            bc.__setState(CellState.FLAGGED);
+        }
+        else{
+            bc.__setState(rbc.state);
+        }
+        dispatchEvent(new GameEvent(GameEvent.BOARD, [bc]));
     }
 }
 }
